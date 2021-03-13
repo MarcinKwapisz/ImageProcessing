@@ -1,23 +1,36 @@
-from PIL import Image
-from gi.repository import GLib, GdkPixbuf
-import gi
+from PIL import Image,ImageQt,ImageEnhance,ImageOps
 
-gi.require_version("Gtk", "3.0")
 
 class Images():
     def __init__(self):
-        self.image = Image.open('/home/marcin/Projekty/PycharmProjects/SkeletonAppPO/123')
+        self.image = [Image.open('/home/marcin/Projekty/PycharmProjects/SkeletonAppPO/123')]
+        self.changeCurrent()
 
-    def ImageLoader(self, path):
-        self.image = Image.open(path)
+    def changeCurrent(self):
+        self.current = self.image[-1]
 
-    def image2pixbuf(self):
-        data = self.image.tobytes()
-        w, h = self.image.size
-        data = GLib.Bytes.new(data)
-        print(self.image.size,self.image.mode)
-        pix = GdkPixbuf.Pixbuf.new_from_bytes(data, GdkPixbuf.Colorspace.RGB, True, 8, w, h, w*3)
-        return pix
-
-    def gamma(self):
+    def save(self, path):
         pass
+
+    def imageLoader(self, path):
+        self.image.append(Image.open(path))
+        self.changeCurrent()
+
+    def toPixmap(self):
+        return ImageQt.toqpixmap(self.current)
+
+    def undo(self):
+        if len(self.image)>1:
+            self.image.pop()
+            self.changeCurrent()
+        else:
+            pass
+
+    def saturation(self,ratio):
+        converter = ImageEnhance.Color(self.current)
+        self.image.append(converter.enhance(ratio))
+        self.changeCurrent()
+
+    def invert(self):
+        ImageOps.invert()
+        self.image.append(converter.enhance(ratio))
