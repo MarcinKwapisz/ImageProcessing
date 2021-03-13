@@ -10,7 +10,7 @@ class Images():
         self.current = self.image[-1]
 
     def save(self, path):
-        pass
+        print(path)
 
     def imageLoader(self, path):
         self.image.append(Image.open(path))
@@ -31,6 +31,11 @@ class Images():
         self.image.append(converter.enhance(ratio))
         self.changeCurrent()
 
-    def invert(self):
-        ImageOps.invert()
+    def light(self,ratio):
+        converter = ImageEnhance.Brightness(self.current)
         self.image.append(converter.enhance(ratio))
+        self.changeCurrent()
+
+    def invert(self):
+        self.image.append(ImageOps.invert(self.current.convert('RGB')))
+        self.changeCurrent()

@@ -47,6 +47,15 @@ class Window(QMainWindow):
         saturateAct = QAction('Saturation', self)
         saturateAct.triggered.connect(self.saturate)
         filtersMenu.addAction(saturateAct)
+        brightnessAct = QAction('Brightness', self)
+        brightnessAct.triggered.connect(self.light)
+        filtersMenu.addAction(brightnessAct)
+        linearContrastAct = QAction('Linear Contrast', self)
+        linearContrastAct.triggered.connect(self.linearContrast)
+        filtersMenu.addAction(linearContrastAct)
+        invertAct = QAction('Invert', self)
+        invertAct.triggered.connect(self.invert)
+        filtersMenu.addAction(invertAct)
 
     def createTollbar(self):
         scaleUpAct = QAction(QIcon('zoomin.png'),'Scale up', self)
@@ -60,8 +69,6 @@ class Window(QMainWindow):
         self.toolbar.addAction(scaleDownAct)
         self.toolbar.addAction(undoAct)
 
-
-
     def center(self):
         qr = self.frameGeometry()
         cp = QDesktopWidget().availableGeometry().center()
@@ -69,7 +76,8 @@ class Window(QMainWindow):
         self.move(qr.topLeft())
 
     def save(self):
-        print(1223)
+
+        self.image.save(path)
 
     def open(self):
         filename = QFileDialog.getOpenFileName(self, 'Open file', './',"Image files (*.pgm *.pbm *.ppm *.png)")
@@ -93,10 +101,26 @@ class Window(QMainWindow):
         self.label.setPixmap(self.pixmap)
 
     def saturate(self):
-        ratio, pressed = QInputDialog.getDouble(self, "Set value","Value:", 0, 0, 5, 2)
+        ratio, pressed = QInputDialog.getDouble(self, "Set saturation procentage","Value:", 100, 0, 200, 2)
         if pressed:
-            self.image.saturation(ratio)
+            self.image.saturation(ratio/100)
             self.refresh()
+
+    def light(self):
+        ratio, pressed = QInputDialog.getDouble(self, "Set light procentage","Value:", 100, 0, 200, 2)
+        if pressed:
+            self.image.light(ratio/100)
+            self.refresh()
+
+    def linearContrast(self):
+        ratio, pressed = QInputDialog.getDouble(self, "Set contrast procentage","Value:", 100, 0, 200, 2)
+        if pressed:
+            self.image.light(ratio/100)
+            self.refresh()
+
+    def invert(self):
+        self.image.invert()
+        self.refresh()
 
 
 
