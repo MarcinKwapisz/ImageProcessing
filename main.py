@@ -55,18 +55,47 @@ class Window(QMainWindow):
         invertAct = QAction('Invert', self)
         invertAct.triggered.connect(self.invert)
         filtersMenu.addAction(invertAct)
+        monochromaticAct = QAction('Monochromatic', self)
+        monochromaticAct.triggered.connect(self.monochromatic)
+        filtersMenu.addAction(monochromaticAct)
+        monochromatic2Act = QAction('Monochromatic2', self)
+        monochromatic2Act.triggered.connect(self.monochromatic2)
+        filtersMenu.addAction(monochromatic2Act)
+        #Filters own menu
+        filtersMenuown = menubar.addMenu('Filters own')
+        saturateActown = QAction('Saturation', self)
+        saturateActown.triggered.connect(self.saturateOwn)
+        filtersMenuown.addAction(saturateActown)
+        brightnessActown = QAction('Brightness', self)
+        brightnessActown.triggered.connect(self.lightOwn)
+        filtersMenuown.addAction(brightnessActown)
+        linearContrastActown = QAction('Linear Contrast', self)
+        linearContrastActown.triggered.connect(self.linearContrastOwn)
+        filtersMenuown.addAction(linearContrastActown)
+        invertActown = QAction('Invert', self)
+        invertActown.triggered.connect(self.invertOwn)
+        filtersMenuown.addAction(invertActown)
+        monochromaticActown = QAction('Monochromatic', self)
+        monochromaticActown.triggered.connect(self.monochromaticOwn)
+        filtersMenuown.addAction(monochromaticActown)
+        monochromatic2Actown = QAction('Monochromatic2', self)
+        monochromatic2Actown.triggered.connect(self.monochromatic2Own)
+        filtersMenuown.addAction(monochromatic2Actown)
 
     def createTollbar(self):
         scaleUpAct = QAction(QIcon('zoomin.png'),'Scale up', self)
         undoAct = QAction(QIcon('undo.png'),'Undo', self)
+        forwardAct = QAction(QIcon('forward.png'),'Forward', self)
         scaleDownAct = QAction(QIcon('zoomout.png'),'Scale down', self)
         scaleUpAct.triggered.connect(self.scaleup)
         undoAct.triggered.connect(self.undo)
+        forwardAct.triggered.connect(self.forward)
         scaleDownAct.triggered.connect(self.scaledown)
         self.toolbar = self.addToolBar("Scale")
         self.toolbar.addAction(scaleUpAct)
         self.toolbar.addAction(scaleDownAct)
         self.toolbar.addAction(undoAct)
+        self.toolbar.addAction(forwardAct)
 
     def center(self):
         qr = self.frameGeometry()
@@ -88,6 +117,11 @@ class Window(QMainWindow):
     def undo(self):
         if self.image.checkIfEmpty():
             self.image.undo()
+            self.refresh()
+
+    def forward(self):
+        if self.image.checkIfEmpty():
+            self.image.forward()
             self.refresh()
 
     def refresh(self):
@@ -129,6 +163,54 @@ class Window(QMainWindow):
     def invert(self):
         if self.image.checkIfEmpty():
             self.image.invert()
+            self.refresh()
+
+    def monochromatic(self):
+        if self.image.checkIfEmpty():
+            self.image.monochromatic()
+            self.refresh()
+
+
+    def monochromatic2(self):
+        if self.image.checkIfEmpty():
+            self.image.monochromatic2()
+            self.refresh()
+#own
+    def saturateOwn(self):
+        if self.image.checkIfEmpty():
+            ratio, pressed = QInputDialog.getDouble(self, "Set saturation procentage","Value:", 100, 0, 200, 2)
+            if pressed:
+                self.image.saturationOwn(ratio/100)
+                self.refresh()
+
+    def lightOwn(self):
+        if self.image.checkIfEmpty():
+            ratio, pressed = QInputDialog.getDouble(self, "Set light procentage","Value:", 100, 0, 200, 2)
+            if pressed:
+                self.image.lightOwn(ratio/100)
+                self.refresh()
+
+    def linearContrastOwn(self):
+        if self.image.checkIfEmpty():
+            ratio, pressed = QInputDialog.getDouble(self, "Set contrast procentage","Value:", 100, 0, 200, 2)
+            if pressed:
+                self.image.lightOwn(ratio/100)
+                self.refresh()
+
+    def invertOwn(self):
+        if self.image.checkIfEmpty():
+            self.image.invertOwn()
+            self.refresh()
+
+    def monochromaticOwn(self):
+        if self.image.checkIfEmpty():
+            self.image.monochromaticOwn()
+            self.refresh()
+
+
+    def monochromatic2Own(self):
+        if self.image.checkIfEmpty():
+            self.image.monochromatic2Own()
             self.refresh()
 
 

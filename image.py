@@ -1,22 +1,24 @@
-from PIL import Image,ImageQt,ImageEnhance,ImageOps
-
+from PIL import Image, ImageQt, ImageEnhance, ImageOps
+import math
+import copy
 
 class Images():
     def __init__(self):
-        self.image=[]
+        self.image = []
+        self.imagePoped = []
 
     def changeCurrent(self):
         self.current = self.image[-1]
 
     def saves(self, path):
         extension = str(path[1][0:3]).lower()
-        if extension =='pbm'|'pgm'|'ppm':
+        if extension in ['pbm', 'pgm', 'ppm']:
             ext = 'ppm'
-        elif extension == 'jpeg'|'jpg':
+        elif extension in ['jpeg', 'jpg']:
             ext = 'jpeg'
-        elif extension == 'png':
+        elif extension in ['png']:
             ext = 'png'
-        self.current.save(path[0]+'.'+extension, ext)
+        self.current.save(path[0] + '.' + extension, ext)
 
     def imageLoader(self, path):
         self.image.append(Image.open(path).convert('RGBA'))
@@ -26,27 +28,96 @@ class Images():
         return ImageQt.toqpixmap(self.current)
 
     def checkIfEmpty(self):
-        if len(self.image)>0:
+        if len(self.image) > 0:
             return True
         else:
             return False
+
     def undo(self):
-        if len(self.image)>1:
-            self.image.pop()
+        if len(self.image) > 1:
+            self.imagePoped.append(self.image.pop())
             self.changeCurrent()
         else:
             pass
 
-    def saturation(self,ratio):
+    def forward(self):
+        if len(self.imagePoped) > 0:
+            self.image.append(self.imagePoped.pop())
+            self.changeCurrent()
+        else:
+            pass
+
+    def saturation(self, ratio):
         converter = ImageEnhance.Color(self.current)
         self.image.append(converter.enhance(ratio))
         self.changeCurrent()
 
-    def light(self,ratio):
+    def light(self, ratio):
         converter = ImageEnhance.Brightness(self.current)
         self.image.append(converter.enhance(ratio))
         self.changeCurrent()
 
     def invert(self):
-        self.image.append(ImageOps.invert(self.current))
+        self.image.append(ImageOps.invert(self.current.convert('RGB')).convert('RGBA'))
         self.changeCurrent()
+
+    def monochromatic(self):
+        self.image.append(self.current.convert('L').convert('RGBA'))
+        self.changeCurrent()
+
+    def monochromatic2(self):
+        self.image.append(self.current.convert('1').convert('RGBA'))
+        self.changeCurrent()
+
+    def saturationOwn(self,ratio):
+        tmpHSV = copy.deepcopy(self.current.convert('HSV'))
+        width, height = tmpHSV.size
+        for w in range(width):
+            for h in range(height):
+                p = tmpHSV.getpixel((h,w))
+                saturation = int(p[1]*ratio)
+                if saturation>255:
+                    saturation=255
+                tmpHSV.putpixel((h,w),(p[0],saturation,p[2]))
+        self.image.append(tmpHSV.convert('RGBA'))
+        self.changeCurrent()
+
+    def lightOwn(self, ratio):
+        tmpHSV = copy.deepcopy(self.current.convert('HSV'))
+        width, height = tmpHSV.size
+        for w in range(width):
+            for h in range(height):
+                p = tmpHSV.getpixel((h, w))
+                value = int(p[2] * ratio)
+                if value > 255:
+                    value = 255
+                tmpHSV.putpixel((h, w), (p[0], p[1], value))
+        self.image.append(tmpHSV.convert('RGBA'))
+        self.changeCurrent()
+
+    def invertOwn(self):
+        tmpRGB = copy.deepcopy(self.current)
+        width, height = tmpRGB.size
+        for w in range(width):
+            for h in range(height):
+                p = tmpRGB.getpixel((h, w))
+                tmpRGB.putpixel((h, w), (255-p[0], 255-p[1], 255-p[2], p[3]))
+        self.image.append(tmpRGB)
+        self.changeCurrent()
+
+    def monochromaticOwn(self):
+        tmpRGB = copy.deepcopy(self.current)
+        width, height = tmpRGB.size
+        for w in range(width):
+            for h in range(height):
+                p = tmpRGB.getpixel((h, w))
+                avg = int(math.floor(((p[0]*1.3)+(p[1]*1.6)+(p[2]*1.1))/3))
+                if avg>255:
+                    avg=255
+                tmpRGB.putpixel((h, w), (avg, avg, avg, p[3]))
+        self.image.append(tmpRGB)
+        self.changeCurrent()
+
+    def monochromatic2Own(self):
+        tmpRGB = self.current
+        print(tmpRGB.getpixel((0,0)))
