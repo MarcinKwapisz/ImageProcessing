@@ -49,9 +49,6 @@ class Window(QMainWindow):
         brightnessAct = QAction('Brightness', self)
         brightnessAct.triggered.connect(self.light)
         filtersMenu.addAction(brightnessAct)
-        linearContrastAct = QAction('Linear Contrast', self)
-        linearContrastAct.triggered.connect(self.linearContrast)
-        filtersMenu.addAction(linearContrastAct)
         invertAct = QAction('Invert', self)
         invertAct.triggered.connect(self.invert)
         filtersMenu.addAction(invertAct)
@@ -72,6 +69,9 @@ class Window(QMainWindow):
         linearContrastActown = QAction('Linear Contrast', self)
         linearContrastActown.triggered.connect(self.linearContrastOwn)
         filtersMenuown.addAction(linearContrastActown)
+        LogContrastActown = QAction('Log Contrast', self)
+        LogContrastActown.triggered.connect(self.logContrastOwn)
+        filtersMenuown.addAction(LogContrastActown)
         invertActown = QAction('Invert', self)
         invertActown.triggered.connect(self.invertOwn)
         filtersMenuown.addAction(invertActown)
@@ -141,21 +141,14 @@ class Window(QMainWindow):
 
     def saturate(self):
         if self.image.checkIfEmpty():
-            ratio, pressed = QInputDialog.getDouble(self, "Set saturation procentage","Value:", 100, 0, 200, 2)
+            ratio, pressed = QInputDialog.getDouble(self, "Set saturation procentage","Value(0 to 200):", 100, 0, 200, 2)
             if pressed:
                 self.image.saturation(ratio/100)
                 self.refresh()
 
     def light(self):
         if self.image.checkIfEmpty():
-            ratio, pressed = QInputDialog.getDouble(self, "Set light procentage","Value:", 100, 0, 200, 2)
-            if pressed:
-                self.image.light(ratio/100)
-                self.refresh()
-
-    def linearContrast(self):
-        if self.image.checkIfEmpty():
-            ratio, pressed = QInputDialog.getDouble(self, "Set contrast procentage","Value:", 100, 0, 200, 2)
+            ratio, pressed = QInputDialog.getDouble(self, "Set light procentage","Value(0 to 200):", 100, 0, 200, 2)
             if pressed:
                 self.image.light(ratio/100)
                 self.refresh()
@@ -178,23 +171,30 @@ class Window(QMainWindow):
 #own
     def saturateOwn(self):
         if self.image.checkIfEmpty():
-            ratio, pressed = QInputDialog.getDouble(self, "Set saturation procentage","Value:", 100, 0, 200, 2)
+            ratio, pressed = QInputDialog.getDouble(self, "Set saturation procentage","Value(0 to 200):", 100, 0, 200, 0)
             if pressed:
                 self.image.saturationOwn(ratio/100)
                 self.refresh()
 
     def lightOwn(self):
         if self.image.checkIfEmpty():
-            ratio, pressed = QInputDialog.getDouble(self, "Set light procentage","Value:", 100, 0, 200, 2)
+            ratio, pressed = QInputDialog.getDouble(self, "Set light procentage","Value(0 to 200):", 100, 0, 200, 0)
             if pressed:
                 self.image.lightOwn(ratio/100)
                 self.refresh()
 
     def linearContrastOwn(self):
         if self.image.checkIfEmpty():
-            ratio, pressed = QInputDialog.getDouble(self, "Set contrast procentage","Value:", 100, 0, 200, 2)
+            ratio, pressed = QInputDialog.getDouble(self, "Set contrast procentage","Value(-255 to 255):", 0, -255, 255, 2)
             if pressed:
-                self.image.lightOwn(ratio/100)
+                self.image.linearcontrastOwn(ratio)
+                self.refresh()
+
+    def logContrastOwn(self):
+        if self.image.checkIfEmpty():
+            ratio, pressed = QInputDialog.getDouble(self, "Set contrast procentage", "Value(0 to 200):", 100, 0, 200, 0)
+            if pressed:
+                self.image.logcontrastOwn(1+ratio/3)
                 self.refresh()
 
     def invertOwn(self):

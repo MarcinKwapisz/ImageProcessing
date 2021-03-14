@@ -2,6 +2,7 @@ from PIL import Image, ImageQt, ImageEnhance, ImageOps
 import math
 import copy
 
+
 class Images():
     def __init__(self):
         self.image = []
@@ -69,16 +70,16 @@ class Images():
         self.image.append(self.current.convert('1').convert('RGBA'))
         self.changeCurrent()
 
-    def saturationOwn(self,ratio):
+    def saturationOwn(self, ratio):
         tmpHSV = copy.deepcopy(self.current.convert('HSV'))
         width, height = tmpHSV.size
         for w in range(width):
             for h in range(height):
-                p = tmpHSV.getpixel((h,w))
-                saturation = int(p[1]*ratio)
-                if saturation>255:
-                    saturation=255
-                tmpHSV.putpixel((h,w),(p[0],saturation,p[2]))
+                p = tmpHSV.getpixel((w, h))
+                saturation = int(p[1] * ratio)
+                if saturation > 255:
+                    saturation = 255
+                tmpHSV.putpixel((w, h), (p[0], saturation, p[2]))
         self.image.append(tmpHSV.convert('RGBA'))
         self.changeCurrent()
 
@@ -87,11 +88,11 @@ class Images():
         width, height = tmpHSV.size
         for w in range(width):
             for h in range(height):
-                p = tmpHSV.getpixel((h, w))
+                p = tmpHSV.getpixel((w, h))
                 value = int(p[2] * ratio)
                 if value > 255:
                     value = 255
-                tmpHSV.putpixel((h, w), (p[0], p[1], value))
+                tmpHSV.putpixel((w, h), (p[0], p[1], value))
         self.image.append(tmpHSV.convert('RGBA'))
         self.changeCurrent()
 
@@ -100,8 +101,8 @@ class Images():
         width, height = tmpRGB.size
         for w in range(width):
             for h in range(height):
-                p = tmpRGB.getpixel((h, w))
-                tmpRGB.putpixel((h, w), (255-p[0], 255-p[1], 255-p[2], p[3]))
+                p = tmpRGB.getpixel((w, h))
+                tmpRGB.putpixel((w, h), (255 - p[0], 255 - p[1], 255 - p[2], p[3]))
         self.image.append(tmpRGB)
         self.changeCurrent()
 
@@ -110,14 +111,42 @@ class Images():
         width, height = tmpRGB.size
         for w in range(width):
             for h in range(height):
-                p = tmpRGB.getpixel((h, w))
-                avg = int(math.floor(((p[0]*1.3)+(p[1]*1.6)+(p[2]*1.1))/3))
-                if avg>255:
-                    avg=255
-                tmpRGB.putpixel((h, w), (avg, avg, avg, p[3]))
+                p = tmpRGB.getpixel((w, h))
+                avg = int(math.floor(((p[0] * 1.3) + (p[1] * 1.6) + (p[2] * 1.1)) / 3))
+                if avg > 255:
+                    avg = 255
+                tmpRGB.putpixel((w, h), (avg, avg, avg, p[3]))
         self.image.append(tmpRGB)
         self.changeCurrent()
 
     def monochromatic2Own(self):
         tmpRGB = self.current
-        print(tmpRGB.getpixel((0,0)))
+        print(tmpRGB.getpixel((0, 0)))
+
+    def linearcontrastOwn(self, ratio):
+        tmpRGB = copy.deepcopy(self.current)
+        factor = (259 * (ratio + 255)) / (255 * (259 - ratio))
+        width, height = tmpRGB.size
+        for w in range(width):
+            for h in range(height):
+                p = tmpRGB.getpixel((w, h))
+                newRed = math.floor(factor * (p[0] - 128) + 128)
+                newGreen = math.floor(factor * (p[1] - 128) + 128)
+                newBlue = math.floor(factor * (p[2] - 128) + 128)
+                tmpRGB.putpixel((w, h), (newRed, newGreen, newBlue, p[3]))
+        self.image.append(tmpRGB)
+        self.changeCurrent()
+
+    def logcontrastOwn(self, ratio):
+        tmpRGB = copy.deepcopy(self.current)
+        width, height = tmpRGB.size
+        for w in range(width):
+            for h in range(height):
+                p = tmpRGB.getpixel((w, h))
+                # print(str(math.log(p[0]+1)) + "  " + str(p[0]) + " "+ str(ratio))
+                newRed = math.floor(ratio * math.log(p[0]+1))
+                newGreen = math.floor(ratio * math.log(p[1]+1))
+                newBlue = math.floor(ratio * math.log(p[2]+1))
+                tmpRGB.putpixel((w, h), (newRed, newGreen, newBlue, p[3]))
+        self.image.append(tmpRGB)
+        self.changeCurrent()
