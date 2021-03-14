@@ -10,7 +10,7 @@ class Window(QMainWindow):
     def __init__(self):
         super().__init__()
         self.image = image.Images()
-        self.pixmap = self.image.toPixmap()
+        self.pixmap = ''
         self.initUI()
 
     def initUI(self):
@@ -29,7 +29,6 @@ class Window(QMainWindow):
         self.label.setAlignment(QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
         self.label.setScaledContents(False)
         self.label.setWordWrap(True)
-        self.label.setPixmap(self.pixmap)
         self.setCentralWidget(self.workspace)
 
     def createMenu(self):
@@ -76,51 +75,61 @@ class Window(QMainWindow):
         self.move(qr.topLeft())
 
     def save(self):
-
-        self.image.save(path)
+        filename = QFileDialog.getSaveFileName(self, 'Open file', './',"PGM (*.pgm);;PBM (*pbm);;PPM (*.ppm);;PNG (*.png)")
+        if filename[0]:
+            self.image.saves(filename)
 
     def open(self):
-        filename = QFileDialog.getOpenFileName(self, 'Open file', './',"Image files (*.pgm *.pbm *.ppm *.png)")
-        self.image.imageLoader(filename[0])
-        self.refresh()
+        filename = QFileDialog.getOpenFileName(self, 'Open file', './', "Image files (*.pgm *.pbm *.ppm *.png)")
+        if filename[0]:
+            self.image.imageLoader(filename[0])
+            self.refresh()
 
     def undo(self):
-        self.image.undo()
-        self.refresh()
+        if self.image.checkIfEmpty():
+            self.image.undo()
+            self.refresh()
 
     def refresh(self):
-        self.pixmap = self.image.toPixmap()
-        self.label.setPixmap(self.pixmap)
+        if self.image.checkIfEmpty():
+            self.pixmap = self.image.toPixmap()
+            self.label.setPixmap(self.pixmap)
 
     def scaleup(self):
-        self.pixmap = self.pixmap.scaled(int(self.pixmap.width() * 1.1), int(self.pixmap.height() * 1.1),QtCore.Qt.KeepAspectRatio)
-        self.label.setPixmap(self.pixmap)
+        if self.image.checkIfEmpty():
+            self.pixmap = self.pixmap.scaled(int(self.pixmap.width() * 1.1), int(self.pixmap.height() * 1.1),QtCore.Qt.KeepAspectRatio)
+            self.label.setPixmap(self.pixmap)
 
     def scaledown(self):
-        self.pixmap = self.pixmap.scaled(int(self.pixmap.width() * 0.9), int(self.pixmap.height() * 0.9),QtCore.Qt.KeepAspectRatio)
-        self.label.setPixmap(self.pixmap)
+        if self.image.checkIfEmpty():
+            self.pixmap = self.pixmap.scaled(int(self.pixmap.width() * 0.9), int(self.pixmap.height() * 0.9),QtCore.Qt.KeepAspectRatio)
+            self.label.setPixmap(self.pixmap)
 
     def saturate(self):
-        ratio, pressed = QInputDialog.getDouble(self, "Set saturation procentage","Value:", 100, 0, 200, 2)
-        if pressed:
-            self.image.saturation(ratio/100)
-            self.refresh()
+        if self.image.checkIfEmpty():
+            ratio, pressed = QInputDialog.getDouble(self, "Set saturation procentage","Value:", 100, 0, 200, 2)
+            if pressed:
+                self.image.saturation(ratio/100)
+                self.refresh()
 
     def light(self):
-        ratio, pressed = QInputDialog.getDouble(self, "Set light procentage","Value:", 100, 0, 200, 2)
-        if pressed:
-            self.image.light(ratio/100)
-            self.refresh()
+        if self.image.checkIfEmpty():
+            ratio, pressed = QInputDialog.getDouble(self, "Set light procentage","Value:", 100, 0, 200, 2)
+            if pressed:
+                self.image.light(ratio/100)
+                self.refresh()
 
     def linearContrast(self):
-        ratio, pressed = QInputDialog.getDouble(self, "Set contrast procentage","Value:", 100, 0, 200, 2)
-        if pressed:
-            self.image.light(ratio/100)
-            self.refresh()
+        if self.image.checkIfEmpty():
+            ratio, pressed = QInputDialog.getDouble(self, "Set contrast procentage","Value:", 100, 0, 200, 2)
+            if pressed:
+                self.image.light(ratio/100)
+                self.refresh()
 
     def invert(self):
-        self.image.invert()
-        self.refresh()
+        if self.image.checkIfEmpty():
+            self.image.invert()
+            self.refresh()
 
 
 
