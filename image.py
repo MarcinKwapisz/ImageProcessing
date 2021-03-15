@@ -140,13 +140,29 @@ class Images():
     def logcontrastOwn(self, ratio):
         tmpRGB = copy.deepcopy(self.current)
         width, height = tmpRGB.size
+        c = ratio / math.log(256)
         for w in range(width):
             for h in range(height):
                 p = tmpRGB.getpixel((w, h))
                 # print(str(math.log(p[0]+1)) + "  " + str(p[0]) + " "+ str(ratio))
-                newRed = math.floor(ratio * math.log(p[0]+1))
-                newGreen = math.floor(ratio * math.log(p[1]+1))
-                newBlue = math.floor(ratio * math.log(p[2]+1))
+                newRed = math.floor(c * math.log(p[0] + 1))
+                newGreen = math.floor(c * math.log(p[1] + 1))
+                newBlue = math.floor(c * math.log(p[2] + 1))
+                tmpRGB.putpixel((w, h), (newRed, newGreen, newBlue, p[3]))
+        self.image.append(tmpRGB)
+        self.changeCurrent()
+
+    def powercontrastOwn(self, ratio):
+        tmpRGB = copy.deepcopy(self.current)
+        width, height = tmpRGB.size
+        c = ratio/math.log(256)
+        for w in range(width):
+            for h in range(height):
+                p = tmpRGB.getpixel((w, h))
+                # print(str(math.log(p[0]+1)) + "  " + str(p[0]) + " "+ str(ratio))
+                newRed = math.floor(c * math.log(p[0]+1))
+                newGreen = math.floor(c * math.log(p[1]+1))
+                newBlue = math.floor(c * math.log(p[2]+1))
                 tmpRGB.putpixel((w, h), (newRed, newGreen, newBlue, p[3]))
         self.image.append(tmpRGB)
         self.changeCurrent()

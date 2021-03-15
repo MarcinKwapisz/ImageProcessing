@@ -72,6 +72,9 @@ class Window(QMainWindow):
         LogContrastActown = QAction('Log Contrast', self)
         LogContrastActown.triggered.connect(self.logContrastOwn)
         filtersMenuown.addAction(LogContrastActown)
+        powerContrastActown = QAction('Power Contrast', self)
+        powerContrastActown.triggered.connect(self.powerContrastOwn)
+        filtersMenuown.addAction(powerContrastActown)
         invertActown = QAction('Invert', self)
         invertActown.triggered.connect(self.invertOwn)
         filtersMenuown.addAction(invertActown)
@@ -192,9 +195,16 @@ class Window(QMainWindow):
 
     def logContrastOwn(self):
         if self.image.checkIfEmpty():
-            ratio, pressed = QInputDialog.getDouble(self, "Set contrast procentage", "Value(0 to 200):", 100, 0, 200, 0)
+            ratio, pressed = QInputDialog.getDouble(self, "Set contrast procentage", "Value(0 to 255):", 128, 0, 255, 0)
             if pressed:
                 self.image.logcontrastOwn(1+ratio/3)
+                self.refresh()
+
+    def powerContrastOwn(self):
+        if self.image.checkIfEmpty():
+            ratio, pressed = QInputDialog.getDouble(self, "Set contrast procentage", "Value(0 to 200):", 100, 0, 200, 0)
+            if pressed:
+                self.image.powercontrastOwn(ratio)
                 self.refresh()
 
     def invertOwn(self):
