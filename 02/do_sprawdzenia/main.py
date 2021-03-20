@@ -185,7 +185,7 @@ class Window(QMainWindow):
         if self.image.checkIfEmpty():
             ratio, pressed = QInputDialog.getDouble(self, "Set saturation procentage","Value(0 to 200):", 100, 0, 200, 0)
             if pressed:
-                self.image.saturationOwn(ratio/100)
+                self.image.saturationOwn(ratio/10)
                 self.refresh()
 
     def lightOwn(self):

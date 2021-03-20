@@ -25,11 +25,53 @@ class Images():
         self.current.save(path[0] + '.' + extension, ext)
 
     def imageLoader(self, path):
-        self.image.append(Image.open(path).convert('RGBA'))
+        self.image.append(Image.open(path).convert('RGB'))
         self.changeCurrent()
 
     def toPixmap(self):
         return ImageQt.toqpixmap(self.current)
+
+    def rgb_to_hsv(self, r, g, b):
+        r = float(r)
+        g = float(g)
+        b = float(b)
+        high = max(r, g, b)
+        low = min(r, g, b)
+        h, s, v = high, high, high
+
+        d = high - low
+        s = 0 if high == 0 else d / high
+
+        if high == low:
+            h = 0.0
+        else:
+            h = {
+                r: (g - b) / d + (6 if g < b else 0),
+                g: (b - r) / d + 2,
+                b: (r - g) / d + 4,
+            }[high]
+            h /= 6
+
+        return h, s, v
+
+    def hsv_to_rgb(self, h, s, v):
+        # h, s = h / 253.3, s / 253.3
+        i = math.floor(h * 6)
+        f = h * 6 - i
+        p = v * (1 - s)
+        q = v * (1 - f * s)
+        t = v * (1 - (1 - f) * s)
+
+        r, g, b = [
+            (v, t, p),
+            (q, v, p),
+            (p, v, t),
+            (p, q, v),
+            (t, p, v),
+            (v, p, q),
+        ][int(i % 6)]
+
+        return int(r), int(g), int(b)
 
     def checkIfEmpty(self):
         if len(self.image) > 0:
@@ -62,41 +104,48 @@ class Images():
         self.changeCurrent()
 
     def invert(self):
-        self.image.append(ImageOps.invert(self.current.convert('RGB')).convert('RGBA'))
+        self.image.append(ImageOps.invert(self.current.convert('RGB')))
         self.changeCurrent()
 
     def monochromatic(self):
-        self.image.append(self.current.convert('L').convert('RGBA'))
+        self.image.append(self.current.convert('L').convert('RGB'))
         self.changeCurrent()
 
     def monochromatic2(self):
-        self.image.append(self.current.convert('1').convert('RGBA'))
+        self.image.append(self.current.convert('1').convert('RGB'))
         self.changeCurrent()
 
     def saturationOwn(self, ratio):
-        tmpHSV = copy.deepcopy(self.current.convert('HSV'))
+        tmpHSV = copy.deepcopy(self.current)
         width, height = tmpHSV.size
         for w in range(width):
             for h in range(height):
-                p = tmpHSV.getpixel((w, h))
-                saturation = int(p[1] * ratio)
-                if saturation > 255:
-                    saturation = 255
-                tmpHSV.putpixel((w, h), (p[0], saturation, p[2]))
-        self.image.append(tmpHSV.convert('RGBA'))
+                hue, sat, val = tmpHSV.getpixel((w, h))
+                p = self.rgb_to_hsv(hue, sat, val)
+                saturation = p[1] * ratio
+                if saturation > 1:
+                    saturation = 1
+                elif saturation < 0:
+                    saturation = 0
+                tmpHSV.putpixel((w, h), self.hsv_to_rgb(p[0], saturation, p[2]))
+        self.image.append(tmpHSV)
         self.changeCurrent()
 
+
     def lightOwn(self, ratio):
-        tmpHSV = copy.deepcopy(self.current.convert('HSV'))
+        tmpHSV = copy.deepcopy(self.current)
         width, height = tmpHSV.size
         for w in range(width):
             for h in range(height):
-                p = tmpHSV.getpixel((w, h))
-                value = int(p[2] * ratio)
-                if value > 255:
-                    value = 255
-                tmpHSV.putpixel((w, h), (p[0], p[1], value))
-        self.image.append(tmpHSV.convert('RGBA'))
+                hue, sat, val = tmpHSV.getpixel((w, h))
+                p = self.rgb_to_hsv(hue, sat, val)
+                light = p[2] * ratio
+                if light > 255:
+                    light = 255
+                elif light < 0:
+                    light = 0
+                tmpHSV.putpixel((w, h), self.hsv_to_rgb(p[0], p[1], light))
+        self.image.append(tmpHSV)
         self.changeCurrent()
 
     def invertOwn(self):
@@ -105,7 +154,7 @@ class Images():
         for w in range(width):
             for h in range(height):
                 p = tmpRGB.getpixel((w, h))
-                tmpRGB.putpixel((w, h), (255 - p[0], 255 - p[1], 255 - p[2], p[3]))
+                tmpRGB.putpixel((w, h), (255 - p[0], 255 - p[1], 255 - p[2]))
         self.image.append(tmpRGB)
         self.changeCurrent()
 
@@ -118,7 +167,7 @@ class Images():
                 avg = int(math.floor(((p[0] * 1.3) + (p[1] * 1.6) + (p[2] * 1.1)) / 3))
                 if avg > 255:
                     avg = 255
-                tmpRGB.putpixel((w, h), (avg, avg, avg, p[3]))
+                tmpRGB.putpixel((w, h), (avg, avg, avg))
         self.image.append(tmpRGB)
         self.changeCurrent()
 
@@ -136,7 +185,7 @@ class Images():
                 newRed = math.floor(factor * (p[0] - 128) + 128)
                 newGreen = math.floor(factor * (p[1] - 128) + 128)
                 newBlue = math.floor(factor * (p[2] - 128) + 128)
-                tmpRGB.putpixel((w, h), (newRed, newGreen, newBlue, p[3]))
+                tmpRGB.putpixel((w, h), (newRed, newGreen, newBlue))
         self.image.append(tmpRGB)
         self.changeCurrent()
 
@@ -151,7 +200,7 @@ class Images():
                 newRed = math.floor(c * math.log(p[0] + 1))
                 newGreen = math.floor(c * math.log(p[1] + 1))
                 newBlue = math.floor(c * math.log(p[2] + 1))
-                tmpRGB.putpixel((w, h), (newRed, newGreen, newBlue, p[3]))
+                tmpRGB.putpixel((w, h), (newRed, newGreen, newBlue))
         self.image.append(tmpRGB)
         self.changeCurrent()
 
