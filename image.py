@@ -269,7 +269,6 @@ class Images():
                 for j in range(256):
                     histogram[j] += tmp[0]
                     tmp.pop(0)
-            print(histogram)
         else:
             r, g, b = self.current.split()
             if color == 1:
