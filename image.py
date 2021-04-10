@@ -347,8 +347,7 @@ class Images():
         w = self.weight(s, e)
         for i in range(s, e):
             m += self.h[i] * i
-        val = m / float(w)
-        return val
+        return m / float(w)  # warning about divide by 0, left in case of other warnings
 
     def variance(self, s, e):
         v = 0
