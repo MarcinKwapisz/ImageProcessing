@@ -321,3 +321,32 @@ class Images():
         self.image.append(normalizedImage)
         self.changeCurrent()
 
+    def otsu(self):
+        tmpRGB = copy.deepcopy(self.current.convert('L'))
+        histogram = tmpRGB.histogram()
+        his, bins = np.histogram(tmpRGB, np.array(range(0, 256)))
+        width, height = tmpRGB.size
+        pixel_number = width*height
+        meanWeigth = 1.0 / pixel_number
+        final_thresh = -1
+        final_value = -1
+        for t in bins[1:-1]:
+            Wb = np.sum(his[:t]) * meanWeigth
+            Wf = np.sum(his[t:]) * meanWeigth
+            mub = np.mean(his[:t])
+            muf = np.mean(his[t:])
+            value = Wb * Wf * (mub - muf) ** 2
+            if value > final_value:
+                final_thresh = t
+                final_value = value
+        print(final_thresh)
+        for w in range(width):
+            for h in range(height):
+                p = tmpRGB.getpixel((w, h))
+                if p > final_thresh:
+                    tmpRGB.putpixel((w, h), 255)
+                else:
+                    tmpRGB.putpixel((w, h), 0)
+
+        self.image.append(tmpRGB)
+        self.changeCurrent()

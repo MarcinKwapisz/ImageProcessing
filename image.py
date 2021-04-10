@@ -283,7 +283,7 @@ class Images():
         plt.bar(range(256), histogram)
         plt.show()
 
-    def normalizeRed(self,intensity):
+    def normalizeRed(self, intensity):
         iI = intensity
         minI = 86
         maxI = 230
@@ -292,7 +292,7 @@ class Images():
         iO = (iI - minI) * (((maxO - minO) / (maxI - minI)) + minO)
         return iO
 
-    def normalizeGreen(self,intensity):
+    def normalizeGreen(self, intensity):
         iI = intensity
         minI = 90
         maxI = 225
@@ -301,7 +301,7 @@ class Images():
         iO = (iI - minI) * (((maxO - minO) / (maxI - minI)) + minO)
         return iO
 
-    def normalizeBlue(self,intensity):
+    def normalizeBlue(self, intensity):
         iI = intensity
         minI = 100
         maxI = 210
@@ -319,4 +319,84 @@ class Images():
         normalizedBlueBand = multiBands[2].point(self.normalizeBlue)
         normalizedImage = Image.merge("RGB", (normalizedRedBand, normalizedGreenBand, normalizedBlueBand))
         self.image.append(normalizedImage)
+        self.changeCurrent()
+
+    def otsuHist(self, img):
+        row, col = img.shape
+        y = np.zeros(256)
+        for i in range(0, row):
+            for j in range(0, col):
+                y[img[i, j]] += 1
+        return y
+
+    def countPixel(self, h):
+        cnt = 0
+        for i in range(0, len(h)):
+            if self.h[i] > 0:
+                cnt += self.h[i]
+        return cnt
+
+    def weight(self, s, e):
+        w = 0
+        for i in range(s, e):
+            w += self.h[i]
+        return w
+
+    def mean(self, s, e):
+        m = 0
+        w = self.weight(s, e)
+        for i in range(s, e):
+            m += self.h[i] * i
+        val = m / float(w)
+        return val
+
+    def variance(self, s, e):
+        v = 0
+        m = self.mean(s, e)
+        w = self.weight(s, e)
+        for i in range(s, e):
+            v += ((i - m) ** 2) * self.h[i]
+        v /= w
+        return v
+
+    def threshold(self, h):
+        cnt = self.countPixel(h)
+        for i in range(1, len(self.h)):
+            vb = self.variance(0, i)
+            wb = self.weight(0, i) / float(cnt)
+            mb = self.mean(0, i)
+
+            vf = self.variance(i, len(self.h))
+            wf = self.weight(i, len(self.h)) / float(cnt)
+            mf = self.mean(i, len(self.h))
+
+            V2w = wb * (vb) + wf * (vf)
+            V2b = wb * wf * (mb - mf) ** 2
+
+            if not math.isnan(V2w):
+                self.threshold_values[i] = V2w
+
+    def get_optimal_threshold(self):
+        min_V2w = min(self.threshold_values.values())
+        optimal_threshold = [k for k, v in self.threshold_values.items() if v == min_V2w]
+        return optimal_threshold[0]
+
+    def otsu(self):
+        self.threshold_values = {}
+        self.h = [1]
+        tmpRGB = copy.deepcopy(self.current.convert('L'))
+        width, height = tmpRGB.size
+        img = np.asarray(copy.deepcopy(tmpRGB))
+        self.h = self.otsuHist(img)
+        self.threshold(self.h)
+        op_thres = self.get_optimal_threshold()
+        for w in range(width):
+            for h in range(height):
+                p = tmpRGB.getpixel((w, h))
+                if p > op_thres:
+                    tmpRGB.putpixel((w, h), 255)
+                else:
+                    tmpRGB.putpixel((w, h), 0)
+
+        self.image.append(tmpRGB)
         self.changeCurrent()
