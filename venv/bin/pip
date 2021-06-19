@@ -1,4 +1,4 @@
-#!/home/marcin/PycharmProjects/SkeletonAppPO/venv/bin/python
+#!/home/marcin/Projekty/PycharmProjects/SkeletonAppPO/venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

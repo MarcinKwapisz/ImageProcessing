@@ -29,7 +29,7 @@ end
 # unset irrelevant variables
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/home/marcin/PycharmProjects/SkeletonAppPO/venv"
+set -gx VIRTUAL_ENV "/home/marcin/Projekty/PycharmProjects/SkeletonAppPO/venv"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH
