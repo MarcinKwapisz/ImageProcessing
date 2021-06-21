@@ -514,9 +514,6 @@ class Images():
         gauss = self.gaussian_kernel(5, sigma=1.5)
         tmp = self.convolve(tmpRGB, gauss)
         im, imTheta = self.sobel_filters(tmp)
-        # błędy w generowaniu nawet przy zastosowaniu wbudowanych funkcji(możliwe że jest to błąd przy konwersji na int)
-        # tablice do splatania użyte z wikipedi i innych źródeł podają że powinno to tak działać
-        # Rozwiązanie: Podany zły tryb, trzeba dać "I" w konwersji
         nMax = self.non_max_suppression(im, imTheta)
         thresh, weak, strong = self.threshold(nMax, lowRatio=low, highRatio=high)
         img = self.edgeTrack(thresh, weak, strong=strong)
