@@ -613,36 +613,6 @@ class Images():
         self.image.append(tmpRGB)
         self.changeCurrent()
 
-    def create_log(self, sigma, size=7):
-        w = math.ceil(float(size) * float(sigma))
-
-        if (w % 2 == 0):
-            w = w + 1
-
-        l_o_g_mask = []
-
-        w_range = int(math.floor(w / 2))
-        print("Going from " + str(-w_range) + " to " + str(w_range))
-        for i in range_inc(-w_range, w_range):
-            for j in range_inc(-w_range, w_range):
-                l_o_g_mask.append(l_o_g(i, j, sigma))
-        l_o_g_mask = np.array(l_o_g_mask)
-        l_o_g_mask = l_o_g_mask.reshape(w, w)
-        return l_o_g_mask
-
-    def laplacian(self):
-        image = np.asarray(copy.deepcopy(self.current.convert('L')))
-        kernel_op = [[-1,-1,-1,-1,-1],
-                     [-1,-1,-1,-1,-1],
-                     [-1, -1, 24, -1, -1],
-                     [-1,-1,-1,-1,-1],
-                     [-1,-1,-1,-1,-1],]
-        Gx = self.convolve(image, kernel_op)
-        tmpRGB = Image.fromarray(Gx.astype(np.uint8))
-        self.image.append(tmpRGB)
-        self.changeCurrent()
-
-
     def convultion_with_kernel(self,kernel):
         tmpRGB = copy.deepcopy(self.current)
         old_pixels = tmpRGB.load()

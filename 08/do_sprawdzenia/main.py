@@ -122,9 +122,6 @@ class Window(QMainWindow):
         kirschActown = QAction('Kirsch', self)
         kirschActown.triggered.connect(self.kirsch)
         filters.addAction(kirschActown)
-        laplacianActown = QAction('Laplacian', self)
-        laplacianActown.triggered.connect(self.laplacian)
-        filters.addAction(laplacianActown)
         moravecActown = QAction('moravec', self)
         moravecActown.triggered.connect(self.moravec)
         filtersMenuown.addAction(moravecActown)
@@ -362,11 +359,6 @@ class Window(QMainWindow):
     def kirsch(self):
         if self.image.checkIfEmpty():
             self.image.kirsch()
-            self.refresh()
-
-    def laplacian(self):
-        if self.image.checkIfEmpty():
-            self.image.laplacian()
             self.refresh()
 
 
