@@ -122,15 +122,9 @@ class Window(QMainWindow):
         kirschActown = QAction('Kirsch', self)
         kirschActown.triggered.connect(self.kirsch)
         filters.addAction(kirschActown)
-        laplacianActown = QAction('Laplacian', self)
+        laplacianActown = QAction('laplacian', self)
         laplacianActown.triggered.connect(self.laplacian)
         filters.addAction(laplacianActown)
-        moravecActown = QAction('moravec', self)
-        moravecActown.triggered.connect(self.moravec)
-        filtersMenuown.addAction(moravecActown)
-        harrisActown = QAction('harris', self)
-        harrisActown.triggered.connect(self.harris)
-        filtersMenuown.addAction(harrisActown)
 
 
 
@@ -349,6 +343,11 @@ class Window(QMainWindow):
             self.image.sobel()
             self.refresh()
 
+    def laplacian(self):
+        if self.image.checkIfEmpty():
+            self.image.laplacian()
+            self.refresh()
+
     def prewitt(self):
         if self.image.checkIfEmpty():
             self.image.prewitt()
@@ -364,12 +363,6 @@ class Window(QMainWindow):
             self.image.kirsch()
             self.refresh()
 
-    def laplacian(self):
-        if self.image.checkIfEmpty():
-            self.image.laplacian()
-            self.refresh()
-
-
     def sharp(self):
         if self.image.checkIfEmpty():
             ratio, pressed = QInputDialog.getDouble(self, "Set sharp strength", "Value(1,10):", 1, 1, 10, 2)
@@ -377,15 +370,6 @@ class Window(QMainWindow):
                 self.image.sharp(ratio/10)
                 self.refresh()
 
-    def moravec(self):
-        if self.image.checkIfEmpty():
-            self.image.moravec()
-            self.refresh()
-
-    def harris(self):
-        if self.image.checkIfEmpty():
-            self.image.harris()
-            self.refresh()
 
 def main():
 

@@ -636,3 +636,68 @@ class Images():
                 draw.point((x, y), (int(acc[0]), int(acc[1]), int(acc[2])))
         self.image.append(new_image)
         self.changeCurrent()
+
+    def filter_log(self, x, y, sigma):
+        nom = ((y ** 2) + (x ** 2) - 2 * (sigma ** 2))
+        denom = ((2 * math.pi * (sigma ** 6)))
+        expo = math.exp(-((x ** 2) + (y ** 2)) / (2 * (sigma ** 2)))
+        return nom * expo / denom
+
+    def create_log(self, sigma, size=7):
+        mask = []
+        w = math.ceil(float(size) * float(sigma))
+        if (w % 2 == 0):
+            w = w + 1
+        rang = int(math.floor(w / 2))
+        for i in range_inc(-rang, rang):
+            for j in range_inc(-rang, rang):
+                mask.append(self.filter_log(i, j, sigma))
+        mask = np.array(mask)
+        mask = mask.reshape(w, w)
+        return mask
+
+    def convolve_log(self,image, mask):
+        width = image.shape[1]
+        height = image.shape[0]
+        rang = int(math.floor(mask.shape[0] / 2))
+        res_image = np.zeros((height, width))
+
+        # Iterate over every pixel that can be covered by the mask
+        for i in range(rang, width - rang):
+            for j in range(rang, height - rang):
+                for k in range_inc(-rang, rang):
+                    for h in range_inc(-rang, rang):
+                        res_image[j, i] += mask[rang + h, rang + k] * image[j + h, i + k]
+        return res_image
+
+    def zc(self, image):
+        image = np.zeros(image.shape)
+
+        # Check the sign (negative or positive) of all the pixels around each pixel
+        for i in range(1, image.shape[0] - 1):
+            for j in range(1, image.shape[1] - 1):
+                neg_count = 0
+                pos_count = 0
+                for a in range_inc(-1, 1):
+                    for b in range_inc(-1, 1):
+                        if (a != 0 and b != 0):
+                            if (image[i + a, j + b] < 0):
+                                neg_count += 1
+                            elif (image[i + a, j + b] > 0):
+                                pos_count += 1
+                zc = ((neg_count > 0) and (pos_count > 0))
+                if (zc):
+                    image[i, j] = 1
+
+        return image
+
+    def laplacian(self):
+        sigma = 1.5
+        size = 3
+        image = np.asarray(copy.deepcopy(self.current.convert('I')))
+        l_o_g_mask = self.create_log(sigma, size)
+        l_o_g_image = self.convolve_log(image, l_o_g_mask)
+        z_c_image = self.z_c_test(l_o_g_image)
+        image = Image.fromarray(z_c_image.astype(np.uint8))
+        self.image.append(image)
+        self.changeCurrent()

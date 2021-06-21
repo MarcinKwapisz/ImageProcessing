@@ -1,4 +1,3 @@
-import PIL.ImageFilter
 from PIL import Image, ImageQt, ImageEnhance, ImageOps, ImageDraw, ImageFile
 import math
 import copy
@@ -6,6 +5,7 @@ import numpy as np
 from scipy.ndimage.filters import convolve
 import scipy.stats as st
 import matplotlib.pyplot as plt
+
 
 class Images():
     def __init__(self):
@@ -613,36 +613,6 @@ class Images():
         self.image.append(tmpRGB)
         self.changeCurrent()
 
-    def create_log(self, sigma, size=7):
-        w = math.ceil(float(size) * float(sigma))
-
-        if (w % 2 == 0):
-            w = w + 1
-
-        l_o_g_mask = []
-
-        w_range = int(math.floor(w / 2))
-        print("Going from " + str(-w_range) + " to " + str(w_range))
-        for i in range_inc(-w_range, w_range):
-            for j in range_inc(-w_range, w_range):
-                l_o_g_mask.append(l_o_g(i, j, sigma))
-        l_o_g_mask = np.array(l_o_g_mask)
-        l_o_g_mask = l_o_g_mask.reshape(w, w)
-        return l_o_g_mask
-
-    def laplacian(self):
-        image = np.asarray(copy.deepcopy(self.current.convert('L')))
-        kernel_op = [[-1,-1,-1,-1,-1],
-                     [-1,-1,-1,-1,-1],
-                     [-1, -1, 24, -1, -1],
-                     [-1,-1,-1,-1,-1],
-                     [-1,-1,-1,-1,-1],]
-        Gx = self.convolve(image, kernel_op)
-        tmpRGB = Image.fromarray(Gx.astype(np.uint8))
-        self.image.append(tmpRGB)
-        self.changeCurrent()
-
-
     def convultion_with_kernel(self,kernel):
         tmpRGB = copy.deepcopy(self.current)
         old_pixels = tmpRGB.load()
@@ -667,96 +637,67 @@ class Images():
         self.image.append(new_image)
         self.changeCurrent()
 
-    def draw_point(self, image, x, y, radius=1):
-        for dx in range(-radius, radius + 1):
-            for dy in range(-radius, radius + 1):
-                image.putpixel((x + dx, y + dy), 255)
+    def filter_log(self, x, y, sigma):
+        nom = ((y ** 2) + (x ** 2) - 2 * (sigma ** 2))
+        denom = ((2 * math.pi * (sigma ** 6)))
+        expo = math.exp(-((x ** 2) + (y ** 2)) / (2 * (sigma ** 2)))
+        return nom * expo / denom
 
-    def draw_corners(self, image, corners_map):
-        for corner in corners_map:
-            self.draw_point(image, corner[0], corner[1])
+    def create_log(self, sigma, size=7):
+        mask = []
+        w = math.ceil(float(size) * float(sigma))
+        if (w % 2 == 0):
+            w = w + 1
+        rang = int(math.floor(w / 2))
+        for i in range_inc(-rang, rang):
+            for j in range_inc(-rang, rang):
+                mask.append(self.filter_log(i, j, sigma))
+        mask = np.array(mask)
+        mask = mask.reshape(w, w)
+        return mask
 
-    def moravec_return_corners(self, image):
-        corners = []
-        xy_shifts = [(1, 0), (1, 1), (0, 1), (-1, 1)]
+    def convolve_log(self,image, mask):
+        width = image.shape[1]
+        height = image.shape[0]
+        rang = int(math.floor(mask.shape[0] / 2))
+        res_image = np.zeros((height, width))
 
-        for y in range(1, image.size[1] - 1):
-            for x in range(1, image.size[0] - 1):
-                E = 100000
-                for shift in xy_shifts:
-                    diff = image.getpixel((x + shift[0], y + shift[1]))
-                    diff = diff - image.getpixel((x, y))
-                    diff = diff * diff
-                    if diff < E:
-                        E = diff
-                if E > 100:#100 is our threshold
-                    corners.append((x, y))
-        return corners
+        # Iterate over every pixel that can be covered by the mask
+        for i in range(rang, width - rang):
+            for j in range(rang, height - rang):
+                for k in range_inc(-rang, rang):
+                    for h in range_inc(-rang, rang):
+                        res_image[j, i] += mask[rang + h, rang + k] * image[j + h, i + k]
+        return res_image
 
-    def moravec(self):
-        image = copy.deepcopy(self.current.convert('L'))
-        moravec_corners = self.moravec_return_corners(image)
-        self.draw_corners(image, moravec_corners)
-        self.image.append(image)
-        self.changeCurrent()
+    def zc(self, image):
+        image = np.zeros(image.shape)
 
-    def harris_return_corners(self, image):
-        threshold = 1000000
+        # Check the sign (negative or positive) of all the pixels around each pixel
+        for i in range(1, image.shape[0] - 1):
+            for j in range(1, image.shape[1] - 1):
+                neg_count = 0
+                pos_count = 0
+                for a in range_inc(-1, 1):
+                    for b in range_inc(-1, 1):
+                        if (a != 0 and b != 0):
+                            if (image[i + a, j + b] < 0):
+                                neg_count += 1
+                            elif (image[i + a, j + b] > 0):
+                                pos_count += 1
+                zc = ((neg_count > 0) and (pos_count > 0))
+                if (zc):
+                    image[i, j] = 1
+
+        return image
+
+    def laplacian(self):
         sigma = 1.5
-        k = 0.04
-        corners = []
-
-        X2 = [[0] * image.size[0] for y in range(image.size[1])]
-        Y2 = [[0] * image.size[0] for y in range(image.size[1])]
-        XY = [[0] * image.size[0] for y in range(image.size[1])]
-        for y in range(1, image.size[1] - 1):
-            for x in range(1, image.size[0] - 1):
-                X = image.getpixel((x + 1, y)) - image.getpixel((x - 1, y))
-                Y = image.getpixel((x, y + 1)) - image.getpixel((x, y - 1))
-                X2[y][x] = X * X
-                Y2[y][x] = Y * Y
-                XY[y][x] = X * Y
-        G = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
-        for y in range(3):
-            for x in range(3):
-                u, v = x - 1, y - 1
-                G[y][x] = (math.exp(-(u * u + v * v) / (2 * sigma * sigma)))
-        A = [[0] * image.size[0] for y in range(image.size[1])]
-        B = [[0] * image.size[0] for y in range(image.size[1])]
-        C = [[0] * image.size[0] for y in range(image.size[1])]
-        for y in range(1, image.size[1] - 1):
-            for x in range(1, image.size[0] - 1):
-                for i in range(3):
-                    for j in range(3):
-                        u, v = j - 1, i - 1
-                        A[y][x] = A[y][x] + X2[y + v][x + u] * G[i][j]
-                        B[y][x] = B[y][x] + Y2[y + v][x + u] * G[i][j]
-                        C[y][x] = C[y][x] + XY[y + v][x + u] * G[i][j]
-        R = [[0] * image.size[0] for y in range(image.size[1])]
-        for y in range(image.size[1]):
-            for x in range(image.size[0]):
-                a, b, c = A[y][x], B[y][x], C[y][x]
-                Tr = a + b
-                Det = a * b - c * c
-                R[y][x] = Det - k * Tr * Tr
-        for y in range(1, image.size[1] - 1):
-            for x in range(1, image.size[0] - 1):
-                maximum = True
-                for dy in (-1, 0, 1):
-                    for dx in (-1, 0, 1):
-                        if R[y][x] < R[y + dy][x + dx]:
-                            maximum = False
-                if maximum and R[y][x] > threshold:
-                    corners.append((x, y))
-
-        return corners
-
-    def harris(self):
-        image = copy.deepcopy(self.current.convert('L'))
-        harris_corners = self.harris_return_corners(image)
-        self.draw_corners(image, harris_corners)
+        size = 3
+        image = np.asarray(copy.deepcopy(self.current.convert('I')))
+        l_o_g_mask = self.create_log(sigma, size)
+        l_o_g_image = self.convolve_log(image, l_o_g_mask)
+        z_c_image = self.z_c_test(l_o_g_image)
+        image = Image.fromarray(z_c_image.astype(np.uint8))
         self.image.append(image)
         self.changeCurrent()
-
-
-
